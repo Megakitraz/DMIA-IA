@@ -46,7 +46,9 @@ class RedBase extends Base implements RedRobot {
     // creates a new harvester
     newHarvester();
     // 7 more harvesters to create
-    brain[5].x = 7;
+    brain[5].x = 3;
+    brain[5].y = 2;
+    brain[5].z = 2;
   }
 
   //
@@ -88,7 +90,7 @@ class RedBase extends Base implements RedRobot {
     // creates new bullets and fafs if the stock is low and enought energy
     if ((bullets < 10) && (energy > 1000))
       newBullets(50);
-    if ((bullets < 10) && (energy > 1000))
+    if ((fafs < 10) && (energy > 1000))
       newFafs(10);
 
     // if ennemy rocket launcher in the area of perception
