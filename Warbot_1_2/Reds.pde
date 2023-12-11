@@ -7,7 +7,7 @@
 
 class RedTeam extends Team {
   final int MY_CUSTOM_MSG = 5;
-  
+
   PVector base1, base2;
 
   // coordinates of the 2 bases, chosen in the rectangle with corners
@@ -17,7 +17,7 @@ class RedTeam extends Team {
     base1 = new PVector(width/2 + 300, (height - 100)/2 - 150);
     // second base
     base2 = new PVector(width/2 + 300, (height - 100)/2 + 150);
-  }  
+  }
 }
 
 interface RedRobot {
@@ -46,8 +46,8 @@ class RedBase extends Base implements RedRobot {
     // creates a new harvester
     newHarvester();
     // 7 more harvesters to create
-    brain[5].x = 3;
-    brain[5].y = 2;
+    brain[5].x = 4;
+    brain[5].y = 1;
     brain[5].z = 2;
   }
 
@@ -58,24 +58,24 @@ class RedBase extends Base implements RedRobot {
   // > defines the behavior of the agent
   //
   void go() {
-    // handle received messages 
+    // handle received messages
     handleMessages();
 
     // creates new robots depending on energy and the state of brain[5]
     if ((brain[5].x > 0) && (energy >= 1000 + harvesterCost)) {
-      // 1st priority = creates harvesters 
+      // 1st priority = creates harvesters
       if (newHarvester())
         brain[5].x--;
     } else if ((brain[5].y > 0) && (energy >= 1000 + launcherCost)) {
-      // 2nd priority = creates rocket launchers 
+      // 2nd priority = creates rocket launchers
       if (newRocketLauncher())
         brain[5].y--;
     } else if ((brain[5].z > 0) && (energy >= 1000 + explorerCost)) {
-      // 3rd priority = creates explorers 
+      // 3rd priority = creates explorers
       if (newExplorer())
         brain[5].z--;
     } else if (energy > 12000) {
-      // if no robot in the pipe and enough energy 
+      // if no robot in the pipe and enough energy
       if ((int)random(2) == 0)
         // creates a new harvester with 50% chance
         brain[5].x++;
@@ -106,7 +106,7 @@ class RedBase extends Base implements RedRobot {
   //
   // handleMessage
   // =============
-  // > handle messages received since last activation 
+  // > handle messages received since last activation
   //
   void handleMessages() {
     Message msg;
@@ -134,7 +134,7 @@ class RedBase extends Base implements RedRobot {
 
 ///////////////////////////////////////////////////////////////////////////
 //
-// The code for the green explorers
+// The code for the red explorers
 //
 ///////////////////////////////////////////////////////////////////////////
 // map of the brain:
@@ -167,16 +167,32 @@ class RedExplorer extends Explorer implements RedRobot {
   // > defines the behavior of the agent
   //
   void go() {
-    // if food to deposit or too few energy
-    if ((carryingFood > 200) || (energy < 100))
-      // time to go back to base
-      brain[4].x = 1;
-
+    // if faf in perceived
+    if (perceiveFafs() != null) {
+      // "dodge" mode
+      brain[4].x = 2;
+      ArrayList fafsInCone = perceiveFafs();
+      Missile miss = (Missile)minDist(fafsInCone);
+      float an = towards(miss);
+      heading = radians(180) - an;
+      tryToMoveForward();
+    } else {
+      // if food to deposit or too few energy
+      if ((carryingFood > 200) || (energy < 100))
+        // time to go back to base
+        brain[4].x = 1;
+      else brain[4].x = 0;
+    }
+    
     // depending on the state of the robot
     if (brain[4].x == 1) {
       // go back to base...
       goBackToBase();
     } else {
+      // if "dodge" state, dodge
+      if (brain[4].x == 2) {
+        tryToMoveForward();
+      } else
       // ...or explore randomly
       randomMove(45);
     }
@@ -234,7 +250,7 @@ class RedExplorer extends Explorer implements RedRobot {
         // if still away from the base
         // head towards the base (with some variations)...
         heading = towards(bob) + random(-radians(20), radians(20));
-        // ...and try to move forward 
+        // ...and try to move forward
         tryToMoveForward();
       }
     }
@@ -276,7 +292,7 @@ class RedExplorer extends Explorer implements RedRobot {
   // > tell rocket launchers about potential targets
   //
   void driveRocketLaunchers() {
-    // look for an ennemy robot 
+    // look for an ennemy robot
     Robot bob = (Robot)oneOf(perceiveRobots(ennemy));
     if (bob != null) {
       // if one is seen, look for a friend rocket launcher
@@ -332,7 +348,7 @@ class RedExplorer extends Explorer implements RedRobot {
 //
 ///////////////////////////////////////////////////////////////////////////
 // map of the brain:
-//   4.x = (0 = look for food | 1 = go back to base) 
+//   4.x = (0 = look for food | 1 = go back to base)
 //   4.y = (0 = no food found | 1 = food found)
 //   0.x / 0.y = position of the localized food
 ///////////////////////////////////////////////////////////////////////////
@@ -362,17 +378,29 @@ class RedHarvester extends Harvester implements RedRobot {
   void go() {
     // handle messages received
     handleMessages();
-
-    // check for the closest burger
-    Burger b = (Burger)minDist(perceiveBurgers());
-    if ((b != null) && (distance(b) <= 2))
-      // if one is found next to the robot, collect it
-      takeFood(b);
-
-    // if food to deposit or too few energy
-    if ((carryingFood > 200) || (energy < 100))
-      // time to go back to the base
-      brain[4].x = 1;
+    
+    // if faf in perceived
+    if (perceiveFafs() != null) {
+      // "dodge" mode
+      brain[4].x = 2;
+      ArrayList fafsInCone = perceiveFafs();
+      Missile miss = (Missile)minDist(fafsInCone);
+      float an = towards(miss);
+      heading = radians(180) - an;
+      tryToMoveForward();
+    } else {
+      // check for the closest burger
+      Burger b = (Burger)minDist(perceiveBurgers());
+      if ((b != null) && (distance(b) <= 2))
+        // if one is found next to the robot, collect it
+        takeFood(b);
+  
+      // if food to deposit or too few energy
+      if ((carryingFood > 200) || (energy < 100))
+        // time to go back to the base
+        brain[4].x = 1;
+      else brain[4].x = 0;
+    }
 
     // if in "go back" state
     if (brain[4].x == 1) {
@@ -392,6 +420,10 @@ class RedHarvester extends Harvester implements RedRobot {
       }
     } else
       // if not in the "go back" state, explore and collect food
+      // if "dodge" state, dodge
+      if (brain[4].x == 2) {
+        tryToMoveForward();
+      } else
       goAndEat();
   }
 
@@ -442,7 +474,7 @@ class RedHarvester extends Harvester implements RedRobot {
     Base bob = (Base)minDist(myBases);
     if (bob != null) {
       float dist = distance(bob);
-      // if wall seen and not at the limit of perception of the base 
+      // if wall seen and not at the limit of perception of the base
       if ((wally != null) && ((dist < basePerception - 1) || (dist > basePerception + 2)))
         // tries to collect the wall
         takeWall(wally);
@@ -532,13 +564,13 @@ class RedHarvester extends Harvester implements RedRobot {
 
 ///////////////////////////////////////////////////////////////////////////
 //
-// The code for the green rocket launchers
+// The code for the red rocket launchers
 //
 ///////////////////////////////////////////////////////////////////////////
 // map of the brain:
 //   0.x / 0.y = position of the target
 //   0.z = breed of the target
-//   4.x = (0 = look for target | 1 = go back to base) 
+//   4.x = (0 = look for target | 1 = go back to base | 2 = dodge Fafs)
 //   4.y = (0 = no target | 1 = localized target)
 ///////////////////////////////////////////////////////////////////////////
 class RedRocketLauncher extends RocketLauncher implements RedRobot {
@@ -565,24 +597,42 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
   // > defines the behavior of the agent
   //
   void go() {
+    // if faf in perceived
+    if (perceiveFafs() != null) {
+      // "dodge" mode
+      brain[4].x = 2;
+      ArrayList fafsInCone = perceiveFafs();
+      Missile miss = (Missile)minDist(fafsInCone);
+      float an = towards(miss);
+      heading = radians(180) - an;
+      tryToMoveForward();
+    }
     // if no energy or no bullets
-    if ((energy < 100) || (bullets == 0))
-      // go back to the base
-      brain[4].x = 1;
-
+    else {
+      if ((energy < 100) || (bullets == 0))
+        // go back to the base
+        brain[4].x = 1;
+      else 
+        // back to normal mode
+        brain[4].x = 0;
+    }
     if (brain[4].x == 1) {
       // if in "go back to base" mode
       goBackToBase();
     } else {
-      // try to find a target
-      selectTarget();
-      // if target identified
-      if (target())
-        // shoot on the target
-        launchBullet(towards(brain[0]));
-      else
-        // else explore randomly
-        randomMove(45);
+      if (brain[4].x == 2) {
+        tryToMoveForward();
+      } else {
+        // try to find a target
+        selectTarget();
+        // if target identified
+        if (target())
+          // shoot on the target
+          launchBullet(towards(brain[0]));
+        else
+          // else explore randomly
+          randomMove(45);
+      }
     }
   }
 
@@ -641,7 +691,7 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
         // make a half turn
         right(180);
       } else {
-        // if not next to the base, head towards it... 
+        // if not next to the base, head towards it...
         heading = towards(bob) + random(-radians(20), radians(20));
         // ...and try to move forward
         tryToMoveForward();
