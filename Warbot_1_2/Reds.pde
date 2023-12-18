@@ -627,9 +627,28 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
         // try to find a target
         selectTarget();
         // if target identified
-        if (target())
+        if (target()) {
           // shoot on the target
+        /*
+        if((int) brain[0].x != (int) brain[1].x || (int) brain[0].y != (int) brain[1].y){
+          //launchBullet(towards(brain[0].add(brain[0].sub(brain[1]).mult(distance(brain[0])))));
+          
+          
+        }
+        else{
           launchBullet(towards(brain[0]));
+          print("Normal Launch \n");
+        }
+        */
+        //entre 0.6 et 0.75, 0.7 semble bien
+        float anticipation = 0.7;
+        PVector directionOfTheOponent = new PVector(brain[0].x - brain[1].x,brain[0].y - brain[1].y,0);
+        launchBullet(towards(new PVector(brain[0].x + directionOfTheOponent.x * distance(brain[0]) * anticipation
+        ,brain[0].y + directionOfTheOponent.y * distance(brain[0]) * anticipation
+        ,brain[0].z)));
+        print("Angle de tir = "+towards(brain[0])+"\n");
+        print("Anticipation Launch | brain[0] = ("+brain[0].x+";"+brain[0].y+") | brain[1] = ("+brain[1].x+";"+brain[1].y+") | substract = ("+(brain[0].x - brain[1].x)+";"+(brain[0].y - brain[1].y)+")\n");
+      } 
         else
           // else explore randomly
           randomMove(45);
@@ -1278,52 +1297,7 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
   void setup() {
   }
 
-  //
-  // go
-  // ==
-  // > called at each iteration of the game
-  // > defines the behavior of the agent
-  //
-  void go() {
-    // if no energy or no bullets
-    if ((energy < 100) || (bullets == 0))
-      // go back to the base
-      brain[4].x = 1;
-
-    if (brain[4].x == 1) {
-      // if in "go back to base" mode
-      goBackToBase();
-    } else {
-      // try to find a target
-      selectTarget();
-      // if target identified
-      if (target()){
-        // shoot on the target
-        /*
-        if((int) brain[0].x != (int) brain[1].x || (int) brain[0].y != (int) brain[1].y){
-          //launchBullet(towards(brain[0].add(brain[0].sub(brain[1]).mult(distance(brain[0])))));
-          
-          
-        }
-        else{
-          launchBullet(towards(brain[0]));
-          print("Normal Launch \n");
-        }
-        */
-        //entre 0.6 et 0.75, 0.7 semble bien
-        float anticipation = 0.7;
-        PVector directionOfTheOponent = new PVector(brain[0].x - brain[1].x,brain[0].y - brain[1].y,0);
-        launchBullet(towards(new PVector(brain[0].x + directionOfTheOponent.x * distance(brain[0]) * anticipation
-        ,brain[0].y + directionOfTheOponent.y * distance(brain[0]) * anticipation
-        ,brain[0].z)));
-        print("Angle de tir = "+towards(brain[0])+"\n");
-        print("Anticipation Launch | brain[0] = ("+brain[0].x+";"+brain[0].y+") | brain[1] = ("+brain[1].x+";"+brain[1].y+") | substract = ("+(brain[0].x - brain[1].x)+";"+(brain[0].y - brain[1].y)+")\n");
-      } 
-      else
-        // else explore randomly
-        randomMove(45);
-    }
-  }
+  
 
   //
   // selectTarget
@@ -1407,4 +1381,3 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
       forward(speed);
   }
 }
->>>>>>> a2316781c91f4bd801c67027bf3d41cd99790d96
