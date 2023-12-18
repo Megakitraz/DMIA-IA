@@ -13,3 +13,10 @@ Turtles contient toutes les informations sur les robots (nombre de bullets, coul
 ligne 384 de Turtles pour mettre/retirer le cercle de perception
 
 perceiveFafs() et perceiveFafsInCone() pour détecter les FAFS, on peut alors utiliser la liste des missiles pour les esquiver
+
+informAbotTarget : INFORM_ABOUT_TARGET 
+      float[] args = new float[4];
+      args[0] = target.pos.x;
+      args[1] = target.pos.y;
+      args[2] = target.breed;
+      args[3] = target.who;    
