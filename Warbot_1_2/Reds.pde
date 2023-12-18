@@ -7,9 +7,11 @@ class RedTeam extends Team {
   // (width/2, 0) and (width, height-100)
   RedTeam() {
     // first base
-    base1 = new PVector(width/2 + 300, (height - 100)/2 - 150);
+    //base1 = new PVector(width/2 + 300, (height - 100)/2 - 150);
+    base1 = new PVector(width/2 + 490, (height - 100)/2 - 190);
     // second base
-    base2 = new PVector(width/2 + 300, (height - 100)/2 + 150);
+    //base2 = new PVector(width/2 + 300, (height - 100)/2 + 150);
+    base2 = new PVector(width/2 + 490, (height - 100)/2 + 190);
   }  
 }
 
