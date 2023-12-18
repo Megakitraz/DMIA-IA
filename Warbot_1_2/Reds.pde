@@ -538,6 +538,8 @@ class RedHarvester extends Harvester implements RedRobot {
 // map of the brain:
 //   0.x / 0.y = position of the target
 //   0.z = breed of the target
+//   1.x / 1.y = position of the target 1 frame before 0.x / 0.y 
+//   1.z = breed of the target 1 frame before 0.z 
 //   4.x = (0 = look for target | 1 = go back to base) 
 //   4.y = (0 = no target | 1 = localized target)
 ///////////////////////////////////////////////////////////////////////////
@@ -577,9 +579,28 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
       // try to find a target
       selectTarget();
       // if target identified
-      if (target())
+      if (target()){
         // shoot on the target
-        launchBullet(towards(brain[0]));
+        /*
+        if((int) brain[0].x != (int) brain[1].x || (int) brain[0].y != (int) brain[1].y){
+          //launchBullet(towards(brain[0].add(brain[0].sub(brain[1]).mult(distance(brain[0])))));
+          
+          
+        }
+        else{
+          launchBullet(towards(brain[0]));
+          print("Normal Launch \n");
+        }
+        */
+        //entre 0.6 et 0.75, 0.7 semble bien
+        float anticipation = 0.7;
+        PVector directionOfTheOponent = new PVector(brain[0].x - brain[1].x,brain[0].y - brain[1].y,0);
+        launchBullet(towards(new PVector(brain[0].x + directionOfTheOponent.x * distance(brain[0]) * anticipation
+        ,brain[0].y + directionOfTheOponent.y * distance(brain[0]) * anticipation
+        ,brain[0].z)));
+        print("Angle de tir = "+towards(brain[0])+"\n");
+        print("Anticipation Launch | brain[0] = ("+brain[0].x+";"+brain[0].y+") | brain[1] = ("+brain[1].x+";"+brain[1].y+") | substract = ("+(brain[0].x - brain[1].x)+";"+(brain[0].y - brain[1].y)+")\n");
+      } 
       else
         // else explore randomly
         randomMove(45);
@@ -595,6 +616,10 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
     // look for the closest ennemy robot
     Robot bob = (Robot)minDist(perceiveRobots(ennemy));
     if (bob != null) {
+      
+      brain[1].x = brain[0].x;
+      brain[1].y = brain[0].y;
+      brain[1].z = bob.breed;
       // if one found, record the position and breed of the target
       brain[0].x = bob.pos.x;
       brain[0].y = bob.pos.y;
