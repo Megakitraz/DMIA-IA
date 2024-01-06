@@ -654,6 +654,12 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
           }
           */
           //entre 0.6 et 0.75, 0.7 semble bien
+          float distanceToTarget = abs(brain[0].dist(pos));
+          
+          if(distanceToTarget <= 10){
+            tryToMoveBackward();
+          }
+          
           float anticipation = 0.7;
           PVector directionOfTheOponent = new PVector(brain[0].x - brain[1].x,brain[0].y - brain[1].y,0);
           launchBullet(towards(new PVector(brain[0].x + directionOfTheOponent.x * distance(brain[0]) * anticipation
@@ -664,7 +670,7 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
         } 
         else
           // else explore randomly
-          randomMove(45);      
+          randomMove(45);       
       }
     }
   }
@@ -778,6 +784,16 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
     // if there is an obstacle ahead, rotate randomly
     if (!freeAhead(speed))
       right(random(360));
+
+    // if there is no obstacle ahead, move forward at full speed
+    if (freeAhead(speed))
+      forward(speed);
+  }
+  
+  void tryToMoveBackward() {
+    // if there is an obstacle ahead, rotate randomly
+    if (!freeAhead(speed))
+      right(random(180));
 
     // if there is no obstacle ahead, move forward at full speed
     if (freeAhead(speed))
