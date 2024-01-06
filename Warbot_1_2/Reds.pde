@@ -169,6 +169,8 @@ class RedExplorer extends Explorer implements RedRobot {
   // > defines the behavior of the agent
   //
   void go() {
+    handleMessages();
+    
     // if faf in perceived
     if (perceiveFafs() != null) {
       // "dodge" mode
@@ -270,7 +272,31 @@ class RedExplorer extends Explorer implements RedRobot {
   boolean target() {
     return (brain[4].y == 1);
   }
+  
+  //
+  // handleMessages
+  //
+  void handleMessages() {
+    float d = width;
+    PVector p = new PVector();
 
+    Message msg;
+    // for all messages
+    for (int i=0; i<messages.size(); i++) {
+      // get next message
+      msg = messages.get(i);
+      // an harvester is full
+      if (msg.type== 5) {
+        float who = msg.args[0];
+        print((int) who, "who \n");
+        Robot bob = game.getRobot((int) who);
+        heading = towards(bob);
+        tryToMoveForward();
+        
+      }
+    }
+  }
+    
   //
   // driveHarvesters
   // ===============
@@ -398,9 +424,17 @@ class RedHarvester extends Harvester implements RedRobot {
         takeFood(b);
   
       // if food to deposit or too few energy
-      if ((carryingFood > 200) || (energy < 100))
+      if ((carryingFood > 200) || (energy < 100)) {
+        if (carryingFood > 200) {
+          //send explorer food is full
+          Explorer explo = (Explorer)oneOf(perceiveRobots(friend, EXPLORER));
+          if (explo != null) {
+            informAboutFullFood(explo);
+            giveFood(explo,carryingFood);
+          }
+        }
         // time to go back to the base
-        brain[4].x = 1;
+        brain[4].x = 1; }
       else brain[4].x = 0;
     }
 
@@ -427,6 +461,17 @@ class RedHarvester extends Harvester implements RedRobot {
         tryToMoveForward();
       } else
       goAndEat();
+  }
+
+  //
+  // informAboutFullFood
+  //
+  void informAboutFullFood(Robot explo) {
+    
+     float[] args = new float[1];
+     args[0] = explo.who;
+     print("message send \n");
+     sendMessage(explo,5,args);
   }
 
   //
@@ -635,7 +680,7 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
           PVector directionOfTheOponent = new PVector(brain[0].x, brain[0].y);
           heading = towards(directionOfTheOponent);
           //tryToMoveForward();
-          print("marche en direction de la cible : ", directionOfTheOponent);
+          //print("marche en direction de la cible : ", directionOfTheOponent);
         }
         
         selectTarget();
@@ -687,10 +732,10 @@ class RedRocketLauncher extends RocketLauncher implements RedRobot {
       // if "localized target" message
       if (msg.type == INFORM_ABOUT_TARGET) {
         // record the position of the target
-        print("message de cible :");
+        //print("message de cible :");
         p.x = msg.args[0];
         p.y = msg.args[1];
-        print("position ennemie : ",p.x, p.y,"\n");
+        //print("position ennemie : ",p.x, p.y,"\n");
         if (distance(p) < d) {
           // if burger closer than closest target
           // record the position in the brain
